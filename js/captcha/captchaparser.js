@@ -268,7 +268,7 @@ function myMain(evt) {
     var img = document.getElementById("captcha_id");
     img.style.height = "40px!important";
     img.style.width = "200px!important";
-    var textB = document.getElementById("captchaString");
+    var textB = document.getElementById("captchaString") || document.getElementById("captchaStringProgInfo");
     var submitB = document.getElementById("loginButton");
     solve(img, textB);
     submitB.focus();
