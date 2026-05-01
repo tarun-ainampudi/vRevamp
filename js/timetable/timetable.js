@@ -87,6 +87,7 @@ const MutationObserverConfig = { attributes: true, childList: true, subtree: tru
 chrome.runtime.onMessage.addListener((request) => {
   if (request.message === "timetable_view_page") {
     try {
+      chooseCurrentSemester();
       // try to display the timetable data if it exists 
       getTimeTable((d) => {
         displayTableData(d.header, d.data)

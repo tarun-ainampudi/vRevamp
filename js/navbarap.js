@@ -15,12 +15,11 @@ const nav_bar_change = () => {
 			time_table = i;
 		} else if (item.includes("Calendar")) {
 			calendar = i;
-		} else if (item.includes("Marks")) {
+		} else if (item === "Marks") {
 			marks = i;
+		} else if (item.includes("My Curriculum")) {
+      		curriculum = i;
 		}
-    else if (item.includes("My Curriculum")) {
-      curriculum = i;}
-
 	}
 	// console.log(marks, attendance, course_page, da_upload, time_table, calendar);
 	let nav = document.getElementsByClassName("collapse navbar-collapse");
