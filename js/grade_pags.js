@@ -1,63 +1,99 @@
+const grade_to_points = {
+    "S": 10,
+    "A": 9,
+    "B": 8,
+    "C": 7,
+    "D": 6,
+    "E": 5,
+    "F": 0,
+}
+
+function ctype_to_credits(ccode, ctype) {
+    let to_4c = "CSE1008ECE2002MAT1003MAT1002"
+    let etl_3c = "ENG1002ENG2001"
+    switch (ctype) {
+        case "Embedded Theory and Lab":
+            if (etl_3c.includes(ccode)) return 3
+            else return 4
+        case "Theory Only":
+            if (ccode.includes("FRL")) return 2
+            else if (to_4c.includes(ccode)) return 4
+            else return 3
+        case "Embedded Theory and Project":
+            return 4
+        case "Project":
+            return 2
+        case "Non-Credit Club":
+            return 2
+        case "Lab Only":
+            return 2
+        default:
+            return 2
+    }
+}
+
+function calculateGPA(courses) {
+    let grade_points = 0
+    let total_credits = 0
+    console.log(courses)
+    Object.keys(courses).forEach(element => {
+        let credits = courses[element]["credits"]
+        let grade = courses[element]["grade"]
+        total_credits += courses[element]["credits"]
+        grade_points += credits * grade
+    });
+    console.log(grade_points, total_credits)
+    return grade_points / total_credits
+}
+
+function addCreditsColumn(grades_table) {
+    let trows = grades_table.querySelectorAll("tr")
+    trows[0].innerHTML += '<th rowspan="2">Credits</th>'
+    for (var i = 1; i < trows.length; i++) {
+        let cols = trows[i].querySelectorAll("td")
+        let ccode = cols[1] ? cols[1].innerText.trim().toUpperCase() : ''
+        let ctype = cols[3] ? cols[3].innerText.trim() : ''
+        if (!ccode.match(/[A-Z]{3}[0-9]{4}/g)) continue
+        trows[i].innerHTML += '<td><input class="credit-input" type="number" min="0" max="12"></td>'
+        let credits = ctype_to_credits(ccode, ctype)
+        trows[i].querySelector(".credit-input").value = credits
+    }
+}
+
+function updateGPA(grades_table) {
+    let trows = grades_table.querySelectorAll("tr")
+    let courses = {}
+    for (var i = 1; i < trows.length; i++) {
+        let cols = trows[i].querySelectorAll("td")
+        let ccode = cols[1] ? cols[1].innerText.trim().toUpperCase() : ''
+        let ctype = cols[3] ? cols[3].innerText.trim() : ''
+        let grade = cols[6] ? cols[6].innerText.trim().toUpperCase() : ''
+        if (!ccode.match(/[A-Z]{3}[0-9]{4}/g) || !"SABCDEF".includes(grade)) continue
+        if (ccode != '' && ctype != '' && grade != '') {
+            let credits = trows[i].querySelector(".credit-input").value
+            courses[ccode] = {
+                type: ctype,
+                credits: Number(credits),
+                grade: grade_to_points[grade]
+            }
+        } else {
+            console.log(`${ccode}-${ctype}-${grade} is missing`)
+        }
+    }
+    var gpaElement = `<td colspan="11" style="text-align:center">GPA : ${calculateGPA(courses).toFixed(2)}</td>`
+    trows[trows.length - 1].innerHTML = gpaElement
+}
+
 let modify_grade_page = () => {
-    // check the entry of ajax link
-    // alert ("Hello");
-    
-    let tables = document.querySelectorAll(".customTable-level1 > tbody"); // select all Tables
-    let subject_header = Array.from(document.querySelectorAll("#studentGradeView > div > div > div.row > div > div > div > table > tbody > tr"));
-    let varCount = Array.from(document.querySelectorAll("#studentGradeView > div > div > div.row > div > div > div > table > tbody > tr")).length;
-    let i = 0;
-    // varCount =  $('#studentGradeView > div > div > div.row > div > div > div > table > tbody > tr').length ;
-    // alert (varCount);
-    try {
-        console.log(parseInt(varCount));
-    } catch (error) {
-        console.log(error);
-    }
-    // iterate through the table tr 
-    sum = 0;
-    gpa = 0;
-    for (i = 0; i < varCount; i++) {
-        // To get the subject code
-        // skip header 
-        if (i == 0) {
-            continue;
-        }
-        // S - 10, A - 9, B - 8, C - 7, D - 6, E - 5, F – 
-        let sub_header_row = subject_header[i].getElementsByTagName("td");
-        let credits_col ;
-        let grade_col ;
-        try {
-            credits_col = sub_header_row[4].innerHTML;
-            grade_col  =  sub_header_row[9].innerHTML;
-        } catch (error) {
-            continue;
-        }
-        let credits = credits_col.replace(/[^0-9.]+/g, "");
-        let grade = grade_col.replace(/[^A-Z.]+/g, "");
-        if(grade == 'S'){
-            grade = 10;
-        }else if(grade == 'A'){
-            grade = 9;
-        }else if(grade == 'B'){
-            grade = 8;
-        }else if(grade == 'C'){
-            grade = 7;
-        }else if(grade == 'D'){
-            grade = 6;
-        }else if(grade == 'E'){
-            grade = 5;
-        }else if(grade == 'F'){
-            grade = 0;
-        } 
-        gpa += parseFloat(grade) * parseFloat(credits);
-        sum += parseFloat(credits) ;
-    }
-    // console.log(gpa);
-    // console.log(sum);
-    document.querySelector("#studentGradeView > div > div > div.row > div > div > div > table > tbody").innerHTML +=  `<tr class="tableContent-level1" style='background: rgb(170, 255, 0,0.6);'>
-                    <td colspan="11" style="text-align:center">Your Semster Wise GPA : ${parseFloat(gpa/sum).toFixed(2)}</td>
-                </tr>`;
-   
+
+    var grades_table = document.querySelectorAll("table.table.table-hover.table-bordered")[0]
+    grades_table.innerHTML += '<tr class="tableContent-level1" style="background: rgb(170, 255, 0,0.6);"></tr>'
+    addCreditsColumn(grades_table)
+    updateGPA(grades_table)
+    document.querySelectorAll(".credit-input").forEach(element => {
+        element.addEventListener("input", () => updateGPA(grades_table), true)
+    })
+
 }
 chrome.runtime.onMessage.addListener((request) => {
     if (request.message === "exam_grade") {
